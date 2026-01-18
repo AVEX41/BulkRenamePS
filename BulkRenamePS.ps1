@@ -31,3 +31,11 @@ Write-Output "Enter an output pattern using captured variables (example: Result_
 Write-Output "Leave empty to keep the original filename."
 $OutputPattern = Read-Host -Prompt "Output pattern"
 if ([string]::IsNullOrWhiteSpace($OutputPattern)) { $OutputPattern = '' }
+
+# Build a filesystem glob by replacing variable tokens with '*' so Get-ChildItem can prefilter
+# Regex: replace anything within [] with * for the Get-ChildItem later
+$GlobPattern = $InputPattern -replace '\[[^\]]+\]', '*'
+if ([string]::IsNullOrWhiteSpace($GlobPattern)) { $GlobPattern = '*.*' }
+
+# Collect candidate files using the glob
+$MatchedFiles = Get-ChildItem -Path (Join-Path $ResolvedPath $GlobPattern) -File -ErrorAction SilentlyContinue
