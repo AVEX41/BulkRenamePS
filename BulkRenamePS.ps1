@@ -19,9 +19,10 @@ catch { Write-Error "Invalid path: $Path"; exit 1 }
 
 # Ask the user for an input pattern (supports variables in square brackets)
 Write-Output "Enter an input pattern using variables in square brackets (example: [Prefix]_[NR].cr2). Will only affect files with matching pattern"
+# Reads from user
 $InputPattern = Read-Host -Prompt "Input pattern"
-if ([string]::IsNullOrWhiteSpace($InputPattern)) { $InputPattern = '*.*' }
 
-# Keep `$Pattern` for backwards compatibility with earlier code
-# Keep `$Pattern` for backwards compatibility with earlier code
+# Stop if user doesn't comply
+if ([string]::IsNullOrWhiteSpace($InputPattern)) { throw 'Cancelled by user.' }
+
 $Pattern = $InputPattern
