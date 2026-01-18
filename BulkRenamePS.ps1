@@ -75,3 +75,29 @@ $VarNames = [regex]::Matches($InputPattern, '\[(.*?)\]') | ForEach-Object { $_.G
 # Filter the matched files by ensuring the filename matches the constructed regex
 $MatchedFiles = $MatchedFiles | Where-Object { $Regex.IsMatch($_.Name) }
 
+
+# Create rename candidates by substituting captured variables into the output pattern
+$RenameCandidates = @()
+foreach ($f in $MatchedFiles) {
+    $m = $Regex.Match($f.Name)
+    if (-not $m.Success) { continue }
+    if ([string]::IsNullOrWhiteSpace($OutputPattern)) {
+        $newName = $f.Name
+    }
+    else {
+        $newName = $OutputPattern
+        foreach ($var in $VarNames) {
+            $val = $m.Groups[$var].Value
+            $newName = $newName.Replace("[$var]", $val)
+        }
+    }
+    $RenameCandidates += [PSCustomObject]@{
+        OriginalFullPath = $f.FullName
+        OriginalName     = $f.Name
+        NewName          = $newName
+        NewFullPath      = (Join-Path $ResolvedPath $newName)
+    }
+}
+
+Write-Output $MatchedFiles
+Write-Output $RenameCandidates
