@@ -39,3 +39,39 @@ if ([string]::IsNullOrWhiteSpace($GlobPattern)) { $GlobPattern = '*.*' }
 
 # Collect candidate files using the glob
 $MatchedFiles = Get-ChildItem -Path (Join-Path $ResolvedPath $GlobPattern) -File -ErrorAction SilentlyContinue
+
+# Convert the input pattern into a regex with named capture groups for variables
+function Convert-PatternToRegex {
+    param([string]$pattern)
+    $sb = New-Object System.Text.StringBuilder
+    $sb.Append('^') | Out-Null
+    $i = 0
+    while ($i -lt $pattern.Length) {
+        $c = $pattern[$i]
+        if ($c -eq '[') {
+            $j = $pattern.IndexOf(']', $i + 1)
+            if ($j -lt 0) { break }
+            $name = $pattern.Substring($i + 1, $j - $i - 1)
+            # non-greedy capture for the variable
+            $sb.Append("(?<$name>.+?)") | Out-Null
+            $i = $j + 1
+            continue
+        }
+        if ($c -eq '*') { $sb.Append('.*') | Out-Null; $i++; continue }
+        # escape other characters
+        $sb.Append([regex]::Escape($c)) | Out-Null
+        $i++
+    }
+    $sb.Append('$') | Out-Null
+    return $sb.ToString()
+}
+
+$RegexPattern = Convert-PatternToRegex $InputPattern
+$Regex = [regex]$RegexPattern
+
+# Extract variable names present in the input pattern
+$VarNames = [regex]::Matches($InputPattern, '\[(.*?)\]') | ForEach-Object { $_.Groups[1].Value }
+
+# Filter the matched files by ensuring the filename matches the constructed regex
+$MatchedFiles = $MatchedFiles | Where-Object { $Regex.IsMatch($_.Name) }
+
