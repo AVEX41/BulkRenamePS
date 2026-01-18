@@ -16,3 +16,12 @@ param(
 # the error action is to stop and inform user
 try { $ResolvedPath = (Resolve-Path -LiteralPath $Path -ErrorAction Stop).Path } 
 catch { Write-Error "Invalid path: $Path"; exit 1 }
+
+# Ask the user for an input pattern (supports variables in square brackets)
+Write-Output "Enter an input pattern using variables in square brackets (example: [Prefix]_[NR].cr2). Will only affect files with matching pattern"
+$InputPattern = Read-Host -Prompt "Input pattern"
+if ([string]::IsNullOrWhiteSpace($InputPattern)) { $InputPattern = '*.*' }
+
+# Keep `$Pattern` for backwards compatibility with earlier code
+# Keep `$Pattern` for backwards compatibility with earlier code
+$Pattern = $InputPattern
