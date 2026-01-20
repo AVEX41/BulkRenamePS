@@ -5,6 +5,8 @@
 # Dato: Later
 # ============================================
 
+# :TODO: Create the help comments for PS
+
 # Gathering or populating the Path variable
 param(
     [Parameter(Mandatory = $false)]
@@ -101,3 +103,7 @@ foreach ($f in $MatchedFiles) {
 
 Write-Output $MatchedFiles
 Write-Output $RenameCandidates
+
+# :TODO: Write the renamed files, and ask for confirmation 
+# :TODO: Create backup folder with old files
+#  :TODO: Run
