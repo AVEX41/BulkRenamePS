@@ -2,7 +2,7 @@
 # Script: BulkRenamePS.ps1
 # Purpose: Renames files in bulk based on a specified pattern
 # Author: Aleksander Hoff (GH:@AVEX41)
-# Date: Later
+# Date: 21-01-2026
 # ============================================
 
 <#
