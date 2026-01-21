@@ -13,18 +13,36 @@ Renames files in bulk based on a specified pattern
 The script uses the current working directory as the default Path, but this can be overridden by supplying a Path. 
 Note this is non-recursive.
 The script then asks for a pattern for the files you want to change, e.g. IMG_6769.cr2 can be described as [Name]_[Nr].cr2.
-This can be used to rename to Result_6769.cr2 using Result_[Nr].cr2. It is very important to use brackets [], otherwise all files will be renamed to the same filename!
+This can be used to rename to Result_6769.cr2 using Result_[Nr].cr2. It is very important to use brackets [], Or unexpected behaviour may occur.
 
 .PARAMETER Path
 PATH where files are renamed, non-recursive
 
 .EXAMPLE
-.\BulkRenamePS.ps1 .\Pictures\Album1
 Enter an input pattern using variables in square brackets (example: [Prefix]_[NR].cr2). Will only affect files with matching pattern
-Input pattern: [Name]_[Nr].cr2
-"Enter an output pattern using captured variables (example: Result_[NR].cr2).
+Input pattern: [Name]_[Nr].png
+Enter an output pattern using captured variables (example: Result_[NR].cr2).
 Leave empty to keep the original filename.
-Output pattern: Result_[Nr].cr2
+Output pattern: Result_[Nr].png
+Preview (max 10):
+IMG_8557.png -> Result_8557.png
+IMG_8558.png -> Result_8558.png
+IMG_8559.png -> Result_8559.png
+IMG_8560.png -> Result_8560.png
+IMG_8569.png -> Result_8569.png
+IMG_8580.png -> Result_8580.png
+IMG_8584.png -> Result_8584.png
+IMG_8587.png -> Result_8587.png
+Proceed with rename? (Y/N): y
+Renamed: IMG_8557.png -> Result_8557.png
+Renamed: IMG_8558.png -> Result_8558.png
+Renamed: IMG_8559.png -> Result_8559.png
+Renamed: IMG_8560.png -> Result_8560.png
+Renamed: IMG_8569.png -> Result_8569.png
+Renamed: IMG_8580.png -> Result_8580.png
+Renamed: IMG_8584.png -> Result_8584.png
+Renamed: IMG_8587.png -> Result_8587.png
+Done.
 
 .EXAMPLE
 .\BulkRenamePS.ps1 .\Documents\TextDocuments
@@ -33,6 +51,11 @@ Input pattern: [FileName].txt
 "Enter an output pattern using captured variables (example: Result_[NR].cr2).
 Leave empty to keep the original filename.
 Output pattern: [FileName].md
+Preview (max 10):
+README.txt -> README.md
+Proceed with rename? (Y/N): y
+Renamed: README.txt -> README.md
+Done.
 
 #>
 
@@ -130,9 +153,56 @@ foreach ($f in $MatchedFiles) {
     }
 }
 
-Write-Output $MatchedFiles
-Write-Output $RenameCandidates
+# Write-Output $MatchedFiles
+# Write-Output $RenameCandidates
 
-# :TODO: Write the renamed files, and ask for confirmation 
-# :TODO: Create backup folder with old files
-#  :TODO: Run
+$PerformRename = $false # Default: no, ask for confirmation
+$CreateBackup = $true # Always create a backup
+$PreviewLimit = 10 # How many previews
+
+# Print a preview (max $PreviewLimit lines) of OriginalName -> NewName
+Write-Output "Preview (max $PreviewLimit):"
+$RenameCandidates | Select-Object -First $PreviewLimit | ForEach-Object {
+    Write-Output ("{0} -> {1}" -f $_.OriginalName, $_.NewName)
+}
+
+if ($RenameCandidates.Count -eq 0) {
+    Write-Output "No matching files found. Exiting."
+    exit 0
+}
+
+# Ask for confirmation unless the user pre-enabled $PerformRename
+if (-not $PerformRename) {
+    $confirm = Read-Host -Prompt "Proceed with rename? (Y/N)"
+    if ($confirm -ne 'Y' -and $confirm -ne 'y') { Write-Output 'Cancelled by user.'; exit 0 }
+}
+
+# Create backup folder if requested
+if ($CreateBackup) {
+    $BackupDir = Join-Path $ResolvedPath ("_backup_$(Get-Date -Format 'yyyyMMdd_HHmmss')")
+    try { New-Item -ItemType Directory -Path $BackupDir -Force | Out-Null }
+    catch { Write-Warning "Could not create backup folder: $BackupDir"; $CreateBackup = $false }
+}
+
+# Perform the renames (copy originals to backup, then move originals to new names)
+foreach ($c in $RenameCandidates) {
+    if (Test-Path -LiteralPath $c.NewFullPath) {
+        Write-Warning "Target exists, skipping: $($c.NewName)"
+        continue
+    }
+
+    if ($CreateBackup) {
+        try { Copy-Item -LiteralPath $c.OriginalFullPath -Destination (Join-Path $BackupDir $c.OriginalName) -Force }
+        catch { Write-Warning "Failed to backup $($c.OriginalName): $_" }
+    }
+
+    try {
+        Move-Item -LiteralPath $c.OriginalFullPath -Destination $c.NewFullPath -Force
+        Write-Output ("Renamed: {0} -> {1}" -f $c.OriginalName, $c.NewName)
+    }
+    catch {
+        Write-Error ("Failed to rename $($c.OriginalName): $_")
+    }
+}
+
+Write-Output 'Done.'
