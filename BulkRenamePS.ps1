@@ -1,11 +1,40 @@
 # ============================================
-# Skript: BulkRenamePS.ps1
-# Formål: Gir nytt navn i bulk basert på mønster spesifisert
-# Forfatter: Aleksander Hoff (GH:@AVEX41)
-# Dato: Later
+# Script: BulkRenamePS.ps1
+# Purpose: Renames files in bulk based on a specified pattern
+# Author: Aleksander Hoff (GH:@AVEX41)
+# Date: Later
 # ============================================
 
-# :TODO: Create the help comments for PS
+<#
+.SYNOPSIS
+Renames files in bulk based on a specified pattern
+
+.DESCRIPTION
+The script uses the current working directory as the default Path, but this can be overridden by supplying a Path. 
+Note this is non-recursive.
+The script then asks for a pattern for the files you want to change, e.g. IMG_6769.cr2 can be described as [Name]_[Nr].cr2.
+This can be used to rename to Result_6769.cr2 using Result_[Nr].cr2. It is very important to use brackets [], otherwise all files will be renamed to the same filename!
+
+.PARAMETER Path
+PATH where files are renamed, non-recursive
+
+.EXAMPLE
+.\BulkRenamePS.ps1 .\Pictures\Album1
+Enter an input pattern using variables in square brackets (example: [Prefix]_[NR].cr2). Will only affect files with matching pattern
+Input pattern: [Name]_[Nr].cr2
+"Enter an output pattern using captured variables (example: Result_[NR].cr2).
+Leave empty to keep the original filename.
+Output pattern: Result_[Nr].cr2
+
+.EXAMPLE
+.\BulkRenamePS.ps1 .\Documents\TextDocuments
+Enter an input pattern using variables in square brackets (example: [Prefix]_[NR].cr2). Will only affect files with matching pattern
+Input pattern: [FileName].txt
+"Enter an output pattern using captured variables (example: Result_[NR].cr2).
+Leave empty to keep the original filename.
+Output pattern: [FileName].md
+
+#>
 
 # Gathering or populating the Path variable
 param(
