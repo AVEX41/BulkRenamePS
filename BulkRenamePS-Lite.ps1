@@ -3,7 +3,7 @@
 # Script: BulkRenamePS-Lite.ps1
 # Purpose: Adds a prefix to all files in a directory (non-recursive)
 # Author: Aleksander Hoff (GH:@AVEX41)
-# Date: Later
+# Date: 21-01-2026
 # ============================================
 
 <#
